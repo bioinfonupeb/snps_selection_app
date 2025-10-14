@@ -276,6 +276,17 @@ class VCFProcessor:
     def get_nuc_index(self, nuc: str) -> int:
         return ['A', 'C', 'G', 'T'].index(nuc)
 
+    def log(self, *messages, verbose=False):
+        if not verbose:
+            return
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        for message in messages:
+            # log_message = f'[{timestamp}] {message}'
+            log_message = f'{message}'
+            print(log_message)
+            # self.logger.info(log_message)
+            # self.gui_handler.log(log_message)
+
     # Implementação dos filtros
     def filter_at_least(self, n_reads: int = 1) -> Tuple[List[str], List[str]]:
         '''Filtro: Contagem Mínima de Alelos de Referência'''
@@ -283,30 +294,30 @@ class VCFProcessor:
         filtered_lines = []
         n_lines = len(self.variant_lines)
 
-        print(f'Filtering with at least {n_reads} reads')
-        print(f'Number of variant lines: {n_lines}')
+        self.log(f'Filtering with at least {n_reads} reads', f'Number of variant lines: {n_lines}')
 
         for i, line in enumerate(self.variant_lines):
             allele_ref, allele_alt, sample_info = self.get_info_fields(line)
-            print(f'{i} Allele Ref: {allele_ref}')
-            print(f'{i} Allele Alt: {allele_alt}')
-            print(f'{i} Sample Info: {sample_info}')
+            self.log(f'Processing line {i + 1}/{n_lines}')
+            self.log(f'{i} Allele Ref: {allele_ref}')
+            self.log(f'{i} Allele Alt: {allele_alt}')
+            self.log(f'{i} Sample Info: {sample_info}')
 
             parental_sup_info = sample_info[0]
             pool_sup_info = sample_info[2]
 
-            print(f'{i} Parental Sup Info: {parental_sup_info}')
-            print(f'{i} Pool Sup Info: {pool_sup_info}')
+            self.log(f'{i} Parental Sup Info: {parental_sup_info}')
+            self.log(f'{i} Pool Sup Info: {pool_sup_info}')
 
-            print(f'Getting major nuc for parental sup info: {parental_sup_info[4]}')
+            self.log(f'Getting major nuc for parental sup info: {parental_sup_info[4]}')
             parental_sup_allele, parental_sup_counts = self.get_major_nuc(parental_sup_info[4])
-            print(f'{i} Parental sup allele: {parental_sup_allele}')
-            print(f'{i} Parental sup counts: {parental_sup_counts}')
+            self.log(f'{i} Parental sup allele: {parental_sup_allele}')
+            self.log(f'{i} Parental sup counts: {parental_sup_counts}')
 
-            print(f'Getting major nuc for pool sup info: {pool_sup_info[4]}')
+            self.log(f'Getting major nuc for pool sup info: {pool_sup_info[4]}')
             pool_sup_allele, pool_sup_counts = self.get_major_nuc(pool_sup_info[4])
-            print(f'{i} Pool sup allele: {pool_sup_allele}')
-            print(f'{i} Pool sup counts: {pool_sup_counts}')
+            self.log(f'{i} Pool sup allele: {pool_sup_allele}')
+            self.log(f'{i} Pool sup counts: {pool_sup_counts}')
 
             if parental_sup_allele != pool_sup_allele:
                 filtered_lines.append(line)
@@ -768,10 +779,18 @@ class VCFProcessorGUI:
         if not self.current_output_lines or not self.processor:
             messagebox.showwarning("Aviso", "Nenhum resultado para salvar.")
             return
+        selected_filter = self.filter_combo.get()
+        file_prefix = {
+            "Contagem Mínima de Alelos": "contagem_minima_alelos",
+            "Limiar Percentual": "limiar_percentual",
+            "Alelo de Referência Dominante": "alelo_referencia_dominante",
+            "Diferença da Frequência Máxima": "diferenca_frequencia_maxima",
+            "Média do Pool Aleatório": "media_pool_aleatorio"
+        }.get(selected_filter, "filtered")  # Default to "filtered" if not found
 
-        default_name = f"filtered_{os.path.basename(self.processor.vcf_file_path)}"
+        default_name = f"{file_prefix}_{os.path.basename(self.processor.vcf_file_path)}"
         filename = filedialog.asksaveasfilename(
-            title="Salvar arquivo VCF filtrado",
+            title=f"Salvar arquivo VCF filtrado - {selected_filter}",
             initialfile=default_name,
             defaultextension=".vcf",
             filetypes=[("VCF files", "*.vcf"), ("All files", "*.*")]

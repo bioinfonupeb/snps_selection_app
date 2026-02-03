@@ -466,6 +466,121 @@ class VCFProcessorGUI:
         self.logger = logging.getLogger('SNPs_QTL_Selection')
         self.logger.setLevel(logging.INFO)
 
+
+    def clear_param_frame(self):
+        for widget in self.param_frame.winfo_children():
+            widget.destroy()
+        # Hide help frame when clearing parameters
+        self.help_frame.grid_remove()
+
+    # def setup_ui(self):
+    #     # Main frame
+    #     main_frame = ttk.Frame(self.root, padding="10")
+    #     main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    #
+    #     # Configure grid
+    #     self.root.columnconfigure(0, weight=1)
+    #     self.root.rowconfigure(0, weight=1)
+    #     main_frame.columnconfigure(1, weight=1)
+    #
+    #     # VCF file section
+    #     ttk.Label(main_frame, text="VCF File:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W,
+    #                                                                                 pady=5)
+    #
+    #     file_frame = ttk.Frame(main_frame)
+    #     file_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+    #     file_frame.columnconfigure(0, weight=1)
+    #
+    #     self.file_entry = ttk.Entry(file_frame)
+    #     self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 5))
+    #
+    #     ttk.Button(file_frame, text="Browse", command=self.browse_file).grid(row=0, column=1)
+    #
+    #     # Button to load VCF
+    #     ttk.Button(main_frame, text="Load VCF", command=self.load_vcf).grid(row=2, column=0, columnspan=2, pady=5)
+    #
+    #     # Sample columns configuration section
+    #     self.column_config_frame = ttk.LabelFrame(main_frame, text="Sample Columns Configuration", padding="10")
+    #     self.column_config_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+    #     self.column_config_frame.columnconfigure(1, weight=1)
+    #
+    #     # Initially hidden until VCF is loaded
+    #     self.column_config_frame.grid_remove()
+    #
+    #     # Variables for Comboboxes
+    #     self.parental_sup_var = tk.StringVar()
+    #     self.parental_inf_var = tk.StringVar()
+    #     self.pool_sup_var = tk.StringVar()
+    #     self.pool_rnd_var = tk.StringVar()
+    #
+    #     # Labels and Comboboxes for column configuration
+    #     ttk.Label(self.column_config_frame, text="Parental Superior:").grid(row=0, column=0, sticky=tk.W, pady=5)
+    #     self.parental_sup_combo = ttk.Combobox(self.column_config_frame, textvariable=self.parental_sup_var,
+    #                                            state="readonly")
+    #     self.parental_sup_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+    #
+    #     ttk.Label(self.column_config_frame, text="Parental Inferior:").grid(row=1, column=0, sticky=tk.W, pady=5)
+    #     self.parental_inf_combo = ttk.Combobox(self.column_config_frame, textvariable=self.parental_inf_var,
+    #                                            state="readonly")
+    #     self.parental_inf_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+    #
+    #     ttk.Label(self.column_config_frame, text="Pool Superior:").grid(row=2, column=0, sticky=tk.W, pady=5)
+    #     self.pool_sup_combo = ttk.Combobox(self.column_config_frame, textvariable=self.pool_sup_var, state="readonly")
+    #     self.pool_sup_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+    #
+    #     ttk.Label(self.column_config_frame, text="Random Pool:").grid(row=3, column=0, sticky=tk.W, pady=5)
+    #     self.pool_rnd_combo = ttk.Combobox(self.column_config_frame, textvariable=self.pool_rnd_var, state="readonly")
+    #     self.pool_rnd_combo.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
+    #
+    #     # Button to confirm configuration
+    #     ttk.Button(self.column_config_frame, text="Confirm Configuration", command=self.confirm_column_config).grid(
+    #         row=4, column=0, columnspan=2, pady=10)
+    #
+    #     # Filter selection section
+    #     ttk.Label(main_frame, text="Filter:", font=('Arial', 10, 'bold')).grid(row=4, column=0, sticky=tk.W, pady=10)
+    #
+    #     self.filter_var = tk.StringVar()
+    #     self.filter_combo = ttk.Combobox(main_frame, textvariable=self.filter_var, state="readonly")
+    #     self.filter_combo['values'] = (
+    #         "Minimum Allele Count",
+    #         "Percent Threshold",
+    #         "Dominant Reference Allele",
+    #         "Difference from Maximum Frequency",
+    #         "Random Pool Mean"
+    #     )
+    #     self.filter_combo.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+    #     self.filter_combo.bind('<<ComboboxSelected>>', self.on_filter_select)
+    #
+    #     # Parameter frame
+    #     self.param_frame = ttk.LabelFrame(main_frame, text="Filter Parameters", padding="10")
+    #     self.param_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+    #     self.param_frame.columnconfigure(1, weight=1)
+    #
+    #     # Log area
+    #     log_frame = ttk.LabelFrame(main_frame, text="Logs", padding="5")
+    #     log_frame.grid(row=7, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
+    #     log_frame.columnconfigure(0, weight=1)
+    #     log_frame.rowconfigure(0, weight=1)
+    #     main_frame.rowconfigure(7, weight=1)
+    #
+    #     self.log_text = tk.Text(log_frame, height=15, wrap=tk.WORD)
+    #     scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
+    #     self.log_text.configure(yscrollcommand=scrollbar.set)
+    #
+    #     self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    #     scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+    #
+    #     # Button frame
+    #     button_frame = ttk.Frame(main_frame)
+    #     button_frame.grid(row=8, column=0, columnspan=2, pady=10)
+    #
+    #     ttk.Button(button_frame, text="Apply Filter", command=self.apply_filter).pack(side=tk.LEFT, padx=5)
+    #     self.save_button = ttk.Button(button_frame, text="Save Result", command=self.save_result, state="disabled")
+    #     self.save_button.pack(side=tk.LEFT, padx=5)
+    #
+    #     self.current_output_lines = []
+    #     self.log("Application started. Select a VCF file.")
+
     def setup_ui(self):
         # Main frame
         main_frame = ttk.Frame(self.root, padding="10")
@@ -478,7 +593,7 @@ class VCFProcessorGUI:
 
         # VCF file section
         ttk.Label(main_frame, text="VCF File:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W,
-                                                                                    pady=5)
+                                                                                 pady=5)
 
         file_frame = ttk.Frame(main_frame)
         file_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
@@ -544,17 +659,42 @@ class VCFProcessorGUI:
         self.filter_combo.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         self.filter_combo.bind('<<ComboboxSelected>>', self.on_filter_select)
 
+        # Help information frame
+        self.help_frame = ttk.LabelFrame(main_frame, text="Filter Help Information", padding="10")
+        self.help_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        self.help_frame.columnconfigure(0, weight=1)
+
+        # Help text widget
+        self.help_text = tk.Text(self.help_frame, height=3, wrap=tk.WORD, state="disabled")
+        scrollbar = ttk.Scrollbar(self.help_frame, orient=tk.VERTICAL, command=self.help_text.yview)
+        self.help_text.configure(yscrollcommand=scrollbar.set)
+
+        self.help_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+
+        # Store help descriptions
+        self.filter_help = {
+            "Minimum Allele Count": "Filter condition: check if the superior parental allele nucleotide count is greater than or equal to the specified number in the superior pool nucleotide count",
+            "Percent Threshold": "Filter out variants that do not have the superior pool allele frequency greater than the specified percentage.",
+            "Dominant Reference Allele": "Filter condition: check if the superior parental allele frequency is greater than the other nucleotide frequencies in the superior pool nucleotide count frequency",
+            "Difference from Maximum Frequency": "Accept variants that have the superior parental allele on superior pool frequency closer to the greatest frequency",
+            "Random Pool Mean": "Verify if random pool allele equal to superior parental has a mean percentage is between the average and standard deviation"
+        }
+
+        # Initially hide the help frame
+        self.help_frame.grid_remove()
+
         # Parameter frame
         self.param_frame = ttk.LabelFrame(main_frame, text="Filter Parameters", padding="10")
-        self.param_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        self.param_frame.grid(row=7, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
         self.param_frame.columnconfigure(1, weight=1)
 
         # Log area
         log_frame = ttk.LabelFrame(main_frame, text="Logs", padding="5")
-        log_frame.grid(row=7, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
+        log_frame.grid(row=8, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
-        main_frame.rowconfigure(7, weight=1)
+        main_frame.rowconfigure(8, weight=1)
 
         self.log_text = tk.Text(log_frame, height=15, wrap=tk.WORD)
         scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
@@ -565,7 +705,7 @@ class VCFProcessorGUI:
 
         # Button frame
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=8, column=0, columnspan=2, pady=10)
+        button_frame.grid(row=9, column=0, columnspan=2, pady=10)
 
         ttk.Button(button_frame, text="Apply Filter", command=self.apply_filter).pack(side=tk.LEFT, padx=5)
         self.save_button = ttk.Button(button_frame, text="Save Result", command=self.save_result, state="disabled")
@@ -664,6 +804,19 @@ class VCFProcessorGUI:
     def on_filter_select(self, event):
         selected_filter = self.filter_combo.get()
         self.clear_param_frame()
+
+        # Show help information for the selected filter
+        self.help_frame.grid()
+        self.help_text.config(state="normal")
+        self.help_text.delete(1.0, tk.END)
+
+        if selected_filter in self.filter_help:
+            help_text = self.filter_help[selected_filter]
+            self.help_text.insert(1.0, help_text)
+        else:
+            self.help_text.insert(1.0, "No help information available for this filter.")
+
+        self.help_text.config(state="disabled")
 
         if selected_filter == "Minimum Allele Count":
             self.create_at_least_params()

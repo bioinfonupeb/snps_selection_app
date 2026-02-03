@@ -39,7 +39,7 @@ class VCFProcessor:
         self.variant_lines = []
         self.header_fields = []
         self.header_idx = {}
-        self.sample_columns = []  # Lista das colunas de amostras detectadas
+        self.sample_columns = []  # List of detected sample columns
 
         self.bug_lines = list()
         self.multiple_alleles_lines = list()
@@ -61,7 +61,7 @@ class VCFProcessor:
         self.logger.debug(f'vcf file path: {self.vcf_file_path}')
 
     def load_vcf_file(self) -> bool:
-        '''Carrega e parseia o arquivo VCF'''
+        '''Load and parse the VCF file'''
         try:
             with open(self.vcf_file_path, 'r') as f:
                 lines = f.readlines()
@@ -69,55 +69,55 @@ class VCFProcessor:
                 self.original_lines = [line for line in lines if not line.startswith('#')]
                 self.variant_lines = self.original_lines.copy()
 
-                # Encontrar a linha de header
+                # Find the header line
                 for line in self.metadata_lines:
                     if line.startswith('#CHROM'):
                         self.parse_header(line)
                         break
 
-                self.gui_handler.log(f'Arquivo VCF carregado: {len(self.variant_lines)} variantes encontradas')
-                # self.gui_handler.log(f'Colunas de amostras detectadas: {self.sample_columns}')
+                self.gui_handler.log(f'VCF file loaded: {len(self.variant_lines)} variants found')
+                # self.gui_handler.log(f'Detected sample columns: {self.sample_columns}')
                 return True
         except Exception as e:
-            self.gui_handler.log(f'Erro ao ler arquivo VCF: {str(e)}')
+            self.gui_handler.log(f'Error reading VCF file: {str(e)}')
             return False
 
     def parse_header(self, header_line: str):
-        '''Parseia a linha de header para detectar colunas de amostras'''
+        '''Parse the header line to detect sample columns'''
         header_line = header_line.strip()
         if header_line.startswith('#'):
-            header_line = header_line[1:]  # Remove o #
+            header_line = header_line[1:]  # Remove the #
 
         self.header_fields = header_line.split('\t')
         self.header_idx = {field: idx for idx, field in enumerate(self.header_fields)}
 
-        # As colunas de amostras são as últimas 4 colunas (após FORMAT)
+        # Sample columns are the last 4 columns (after FORMAT)
         format_idx = self.header_idx.get('FORMAT')
         if format_idx is not None and len(self.header_fields) >= format_idx + 5:
             self.sample_columns = self.header_fields[format_idx + 1:format_idx + 5]
         else:
-            # Fallback: pegar as últimas 4 colunas
+            # Fallback: get the last 4 columns
             self.sample_columns = self.header_fields[-4:]
 
-        # Configurar índices básicos
+        # Set up basic indices
         self.alt_idx = self.header_idx.get('ALT')
         self.ref_idx = self.header_idx.get('REF')
 
     def set_sample_columns(self, parental_sup: str, parental_inf: str, pool_sup: str, pool_rnd: str) -> bool:
-        '''Configura as colunas das amostras baseado na seleção do usuário'''
+        '''Configure sample columns based on user selection'''
         try:
             self.parental_sup_idx = self.header_idx[parental_sup]
             self.parental_inf_idx = self.header_idx[parental_inf]
             self.pool_sup_idx = self.header_idx[pool_sup]
             self.pool_rnd_idx = self.header_idx[pool_rnd]
 
-            # self.gui_handler.log(f'Colunas configuradas: P-Sup={parental_sup}({self.parental_sup_idx}), '
+            # self.gui_handler.log(f'Columns configured: P-Sup={parental_sup}({self.parental_sup_idx}), '
             #                  f'P-Inf={parental_inf}({self.parental_inf_idx}), '
             #                  f'Pool-Sup={pool_sup}({self.pool_sup_idx}), '
             #                  f'Pool-Rnd={pool_rnd}({self.pool_rnd_idx})')
             return True
         except Exception as e:
-            self.gui_handler.log(f'Erro ao configurar colunas: {str(e)}')
+            self.gui_handler.log(f'Error configuring columns: {str(e)}')
             return False
 
     def select_most_freq_genotype(self, sample_info: str, nuc_ref: str, nuc_alt: str, verbose: bool = False) -> str:
@@ -250,7 +250,7 @@ class VCFProcessor:
         return selected_rows
 
     def get_info_fields(self, variant_line: str) -> Tuple[str, str, List[List[str]]]:
-        '''Extrai informações dos campos da variante'''
+        '''Extract information from variant fields'''
         fields = variant_line.split('\t')
         allele_ref = fields[3]
         allele_alt = fields[4]
@@ -262,14 +262,14 @@ class VCFProcessor:
         return allele_ref, allele_alt, sample_info
 
     def get_major_nuc(self, info: str) -> Tuple[str, List[int]]:
-        '''Obtém o nucleotídeo com maior contagem'''
+        '''Get the nucleotide with the highest count'''
         nucs = ['A', 'C', 'G', 'T']
         counts = [int(x) for x in info.split(',')]
         i = counts.index(max(counts))
         return nucs[i], counts
 
     def get_counts(self, sample_info: List[str]) -> List[int]:
-        '''Obtém contagens de um sample info'''
+        '''Get counts from a sample info'''
         counts = [int(x) for x in sample_info[4].split(',')]
         return counts
 
@@ -287,9 +287,9 @@ class VCFProcessor:
             # self.logger.info(log_message)
             # self.gui_handler.log(log_message)
 
-    # Implementação dos filtros
+    # Filter implementations
     def filter_at_least(self, n_reads: int = 1) -> Tuple[List[str], List[str]]:
-        '''Filtro: Contagem Mínima de Alelos de Referência'''
+        '''Filter: Minimum Reference Allele Count'''
         output_lines = []
         filtered_lines = []
         n_lines = len(self.variant_lines)
@@ -332,7 +332,7 @@ class VCFProcessor:
         return output_lines, filtered_lines
 
     def filter_percent_threshold(self, threshold: float = 0.75) -> Tuple[List[str], List[str]]:
-        '''Filtro: Limiar Percentual'''
+        '''Filter: Percent Threshold'''
         output_lines = []
         filtered_lines = []
 
@@ -362,7 +362,7 @@ class VCFProcessor:
         return output_lines, filtered_lines
 
     def filter_parental_sup_greater(self) -> Tuple[List[str], List[str]]:
-        '''Filtro: Alelo de Referência Dominante'''
+        '''Filter: Dominant Reference Allele'''
         output_lines = []
         filtered_lines = []
 
@@ -386,7 +386,7 @@ class VCFProcessor:
         return output_lines, filtered_lines
 
     def filter_diff_from_greater(self, diff_max: float = 0.1) -> Tuple[List[str], List[str]]:
-        '''Filtro: Diferença da Frequência Máxima'''
+        '''Filter: Difference from Maximum Frequency'''
         output_lines = []
         filtered_lines = []
 
@@ -413,7 +413,7 @@ class VCFProcessor:
 
     def filter_rnd_mean(self, threshold: float = 0.75, avg: float = 0.5, std: float = 0.02) -> Tuple[
         List[str], List[str]]:
-        '''Filtro: Média do Pool Aleatório'''
+        '''Filter: Random Pool Mean'''
         output_lines = []
         filtered_lines = []
 
@@ -454,7 +454,7 @@ class VCFProcessorGUI:
     def __init__(self, root, logger=None):
         self.root = root
         self.logger = logger
-        self.root.title("Processador de VCF")
+        self.root.title("SNPs_QTL_Selection")
         self.root.geometry("900x800")
 
         self.processor = None
@@ -462,22 +462,22 @@ class VCFProcessorGUI:
         self.setup_ui()
 
     def setup_logging(self):
-        '''Configura o sistema de logging'''
-        self.logger = logging.getLogger('VCFProcessor')
+        '''Configure logging system'''
+        self.logger = logging.getLogger('SNPs_QTL_Selection')
         self.logger.setLevel(logging.INFO)
 
     def setup_ui(self):
-        # Frame principal
+        # Main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # Configurar grid
+        # Configure grid
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
 
-        # Seção de arquivo VCF
-        ttk.Label(main_frame, text="Arquivo VCF:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W,
+        # VCF file section
+        ttk.Label(main_frame, text="VCF File:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W,
                                                                                     pady=5)
 
         file_frame = ttk.Frame(main_frame)
@@ -487,26 +487,26 @@ class VCFProcessorGUI:
         self.file_entry = ttk.Entry(file_frame)
         self.file_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 5))
 
-        ttk.Button(file_frame, text="Procurar", command=self.browse_file).grid(row=0, column=1)
+        ttk.Button(file_frame, text="Browse", command=self.browse_file).grid(row=0, column=1)
 
-        # Botão para carregar VCF
-        ttk.Button(main_frame, text="Carregar VCF", command=self.load_vcf).grid(row=2, column=0, columnspan=2, pady=5)
+        # Button to load VCF
+        ttk.Button(main_frame, text="Load VCF", command=self.load_vcf).grid(row=2, column=0, columnspan=2, pady=5)
 
-        # Seção de configuração das colunas
-        self.column_config_frame = ttk.LabelFrame(main_frame, text="Configuração das Colunas de Amostras", padding="10")
+        # Sample columns configuration section
+        self.column_config_frame = ttk.LabelFrame(main_frame, text="Sample Columns Configuration", padding="10")
         self.column_config_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
         self.column_config_frame.columnconfigure(1, weight=1)
 
-        # Inicialmente escondido até carregar o VCF
+        # Initially hidden until VCF is loaded
         self.column_config_frame.grid_remove()
 
-        # Variáveis para os Comboboxes
+        # Variables for Comboboxes
         self.parental_sup_var = tk.StringVar()
         self.parental_inf_var = tk.StringVar()
         self.pool_sup_var = tk.StringVar()
         self.pool_rnd_var = tk.StringVar()
 
-        # Labels e Comboboxes para configuração das colunas
+        # Labels and Comboboxes for column configuration
         ttk.Label(self.column_config_frame, text="Parental Superior:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.parental_sup_combo = ttk.Combobox(self.column_config_frame, textvariable=self.parental_sup_var,
                                                state="readonly")
@@ -521,35 +521,35 @@ class VCFProcessorGUI:
         self.pool_sup_combo = ttk.Combobox(self.column_config_frame, textvariable=self.pool_sup_var, state="readonly")
         self.pool_sup_combo.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
 
-        ttk.Label(self.column_config_frame, text="Pool Aleatório:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        ttk.Label(self.column_config_frame, text="Random Pool:").grid(row=3, column=0, sticky=tk.W, pady=5)
         self.pool_rnd_combo = ttk.Combobox(self.column_config_frame, textvariable=self.pool_rnd_var, state="readonly")
         self.pool_rnd_combo.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
 
-        # Botão para confirmar configuração
-        ttk.Button(self.column_config_frame, text="Confirmar Configuração", command=self.confirm_column_config).grid(
+        # Button to confirm configuration
+        ttk.Button(self.column_config_frame, text="Confirm Configuration", command=self.confirm_column_config).grid(
             row=4, column=0, columnspan=2, pady=10)
 
-        # Seção de seleção de filtro
-        ttk.Label(main_frame, text="Filtro:", font=('Arial', 10, 'bold')).grid(row=4, column=0, sticky=tk.W, pady=10)
+        # Filter selection section
+        ttk.Label(main_frame, text="Filter:", font=('Arial', 10, 'bold')).grid(row=4, column=0, sticky=tk.W, pady=10)
 
         self.filter_var = tk.StringVar()
         self.filter_combo = ttk.Combobox(main_frame, textvariable=self.filter_var, state="readonly")
         self.filter_combo['values'] = (
-            "Contagem Mínima de Alelos",
-            "Limiar Percentual",
-            "Alelo de Referência Dominante",
-            "Diferença da Frequência Máxima",
-            "Média do Pool Aleatório"
+            "Minimum Allele Count",
+            "Percent Threshold",
+            "Dominant Reference Allele",
+            "Difference from Maximum Frequency",
+            "Random Pool Mean"
         )
         self.filter_combo.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         self.filter_combo.bind('<<ComboboxSelected>>', self.on_filter_select)
 
-        # Frame de parâmetros
-        self.param_frame = ttk.LabelFrame(main_frame, text="Parâmetros do Filtro", padding="10")
+        # Parameter frame
+        self.param_frame = ttk.LabelFrame(main_frame, text="Filter Parameters", padding="10")
         self.param_frame.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
         self.param_frame.columnconfigure(1, weight=1)
 
-        # Área de logs
+        # Log area
         log_frame = ttk.LabelFrame(main_frame, text="Logs", padding="5")
         log_frame.grid(row=7, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
         log_frame.columnconfigure(0, weight=1)
@@ -563,31 +563,31 @@ class VCFProcessorGUI:
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
 
-        # Frame de botões
+        # Button frame
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=8, column=0, columnspan=2, pady=10)
 
-        ttk.Button(button_frame, text="Aplicar Filtro", command=self.apply_filter).pack(side=tk.LEFT, padx=5)
-        self.save_button = ttk.Button(button_frame, text="Salvar Resultado", command=self.save_result, state="disabled")
+        ttk.Button(button_frame, text="Apply Filter", command=self.apply_filter).pack(side=tk.LEFT, padx=5)
+        self.save_button = ttk.Button(button_frame, text="Save Result", command=self.save_result, state="disabled")
         self.save_button.pack(side=tk.LEFT, padx=5)
 
         self.current_output_lines = []
-        self.log("Aplicação iniciada. Selecione um arquivo VCF.")
+        self.log("Application started. Select a VCF file.")
 
     def browse_file(self):
         filename = filedialog.askopenfilename(
-            title="Selecionar arquivo VCF",
+            title="Select VCF file",
             filetypes=[("VCF files", "*.vcf"), ("All files", "*.*")]
         )
         if filename:
             self.file_entry.delete(0, tk.END)
             self.file_entry.insert(0, filename)
-            self.log(f"Arquivo selecionado: {os.path.basename(filename)}")
+            self.log(f"File selected: {os.path.basename(filename)}")
 
     def load_vcf(self):
         file_path = self.file_entry.get()
         if not file_path or not os.path.exists(file_path):
-            messagebox.showerror("Erro", "Por favor, selecione um arquivo VCF válido.")
+            messagebox.showerror("Error", "Please select a valid VCF file.")
             return
 
         try:
@@ -598,35 +598,35 @@ class VCFProcessorGUI:
             if not self.processor.load_vcf_file():
                 return
 
-            # Mostrar frame de configuração de colunas
+            # Show column configuration frame
             self.column_config_frame.grid()
 
-            # Preencher comboboxes com as colunas detectadas
+            # Fill comboboxes with detected columns
             sample_columns = self.processor.sample_columns
             self.parental_sup_combo['values'] = sample_columns
             self.parental_inf_combo['values'] = sample_columns
             self.pool_sup_combo['values'] = sample_columns
             self.pool_rnd_combo['values'] = sample_columns
 
-            # Selecionar valores padrão (primeiras 4 colunas na ordem)
+            # Select default values (first 4 columns in order)
             if len(sample_columns) >= 4:
                 self.parental_sup_var.set(sample_columns[0])
                 self.parental_inf_var.set(sample_columns[1])
                 self.pool_sup_var.set(sample_columns[2])
                 self.pool_rnd_var.set(sample_columns[3])
 
-            # self.log("Arquivo VCF carregado com sucesso!")
-            self.log(f"Colunas de amostras detectadas: {', '.join(sample_columns)}")
-            self.log("Por favor, configure as colunas acima e clique em 'Confirmar Configuração'")
+            # self.log("VCF file loaded successfully!")
+            self.log(f"Detected sample columns: {', '.join(sample_columns)}")
+            self.log("Please configure the columns above and click 'Confirm Configuration'")
 
         except Exception as e:
-            self.log(f"Erro ao carregar VCF: {str(e)}")
-            messagebox.showerror("Erro", f"Erro ao carregar VCF: {str(e)}")
+            self.log(f"Error loading VCF: {str(e)}")
+            messagebox.showerror("Error", f"Error loading VCF: {str(e)}")
 
     def confirm_column_config(self):
-        '''Confirma a configuração das colunas selecionadas pelo usuário'''
+        '''Confirm the column configuration selected by the user'''
         if not self.processor:
-            messagebox.showerror("Erro", "Nenhum arquivo VCF carregado.")
+            messagebox.showerror("Error", "No VCF file loaded.")
             return
 
         parental_sup = self.parental_sup_var.get()
@@ -634,44 +634,44 @@ class VCFProcessorGUI:
         pool_sup = self.pool_sup_var.get()
         pool_rnd = self.pool_rnd_var.get()
 
-        # Verificar se todas as colunas foram selecionadas e são únicas
+        # Check if all columns were selected and are unique
         selected_columns = [parental_sup, parental_inf, pool_sup, pool_rnd]
         if not all(selected_columns):
-            messagebox.showerror("Erro", "Por favor, selecione todas as colunas.")
+            messagebox.showerror("Error", "Please select all columns.")
             return
 
         if len(set(selected_columns)) != 4:
-            messagebox.showerror("Erro", "Por favor, selecione colunas diferentes para cada tipo.")
+            messagebox.showerror("Error", "Please select different columns for each type.")
             return
 
         try:
             if self.processor.set_sample_columns(parental_sup, parental_inf, pool_sup, pool_rnd):
-                self.log("Configuração de colunas confirmada com sucesso!")
+                self.log("Column configuration confirmed successfully!")
                 self.log(f"Parental Superior: {parental_sup}")
                 self.log(f"Parental Inferior: {parental_inf}")
                 self.log(f"Pool Superior: {pool_sup}")
-                self.log(f"Pool Aleatório: {pool_rnd}")
+                self.log(f"Random Pool: {pool_rnd}")
 
-                # Realizar a correção dos genótipos
+                # Perform genotype correction
                 self.processor.correct_genotypes(verbose=True)
             else:
-                messagebox.showerror("Erro", "Erro ao configurar colunas.")
+                messagebox.showerror("Error", "Error configuring columns.")
 
         except Exception as e:
-            self.log(f"Erro ao configurar colunas: {str(e)}")
-            messagebox.showerror("Erro", f"Erro ao configurar colunas: {str(e)}")
+            self.log(f"Error configuring columns: {str(e)}")
+            messagebox.showerror("Error", f"Error configuring columns: {str(e)}")
 
     def on_filter_select(self, event):
         selected_filter = self.filter_combo.get()
         self.clear_param_frame()
 
-        if selected_filter == "Contagem Mínima de Alelos":
+        if selected_filter == "Minimum Allele Count":
             self.create_at_least_params()
-        elif selected_filter == "Limiar Percentual":
+        elif selected_filter == "Percent Threshold":
             self.create_percent_threshold_params()
-        elif selected_filter == "Diferença da Frequência Máxima":
+        elif selected_filter == "Difference from Maximum Frequency":
             self.create_diff_from_greater_params()
-        elif selected_filter == "Média do Pool Aleatório":
+        elif selected_filter == "Random Pool Mean":
             self.create_rnd_mean_params()
 
     def clear_param_frame(self):
@@ -679,33 +679,33 @@ class VCFProcessorGUI:
             widget.destroy()
 
     def create_at_least_params(self):
-        ttk.Label(self.param_frame, text="Contagem mínima de leituras:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.param_frame, text="Minimum read count:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.n_reads_var = tk.StringVar(value="1")
         ttk.Entry(self.param_frame, textvariable=self.n_reads_var, width=10).grid(row=0, column=1, sticky=tk.W, pady=2)
 
     def create_percent_threshold_params(self):
-        ttk.Label(self.param_frame, text="Limiar percentual (%):").grid(row=0, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.param_frame, text="Percent threshold (%):").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.threshold_var = tk.StringVar(value="75")
         ttk.Entry(self.param_frame, textvariable=self.threshold_var, width=10).grid(row=0, column=1, sticky=tk.W,
                                                                                     pady=2)
 
     def create_diff_from_greater_params(self):
-        ttk.Label(self.param_frame, text="Diferença máxima (%):").grid(row=0, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.param_frame, text="Maximum difference (%):").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.diff_max_var = tk.StringVar(value="10")
         ttk.Entry(self.param_frame, textvariable=self.diff_max_var, width=10).grid(row=0, column=1, sticky=tk.W, pady=2)
 
     def create_rnd_mean_params(self):
-        ttk.Label(self.param_frame, text="Limiar (%):").grid(row=0, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.param_frame, text="Threshold (%):").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.rnd_threshold_var = tk.StringVar(value="75")
         ttk.Entry(self.param_frame, textvariable=self.rnd_threshold_var, width=10).grid(row=0, column=1, sticky=tk.W,
                                                                                         pady=2)
 
-        ttk.Label(self.param_frame, text="Média (%):").grid(row=1, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.param_frame, text="Mean (%):").grid(row=1, column=0, sticky=tk.W, pady=2)
         self.avg_count_var = tk.StringVar(value="50")
         ttk.Entry(self.param_frame, textvariable=self.avg_count_var, width=10).grid(row=1, column=1, sticky=tk.W,
                                                                                     pady=2)
 
-        ttk.Label(self.param_frame, text="Desvio padrão (%):").grid(row=2, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.param_frame, text="Standard deviation (%):").grid(row=2, column=0, sticky=tk.W, pady=2)
         self.std_dev_var = tk.StringVar(value="2")
         ttk.Entry(self.param_frame, textvariable=self.std_dev_var, width=10).grid(row=2, column=1, sticky=tk.W, pady=2)
 
@@ -717,17 +717,17 @@ class VCFProcessorGUI:
 
     def apply_filter(self):
         if not self.processor or not self.processor.variant_lines:
-            messagebox.showerror("Erro", "Por favor, carregue e configure um arquivo VCF primeiro.")
+            messagebox.showerror("Error", "Please load and configure a VCF file first.")
             return
 
         if not self.filter_var.get():
-            messagebox.showerror("Erro", "Por favor, selecione um filtro.")
+            messagebox.showerror("Error", "Please select a filter.")
             return
 
-        # Verificar se as colunas foram configuradas
+        # Check if columns were configured
         if any(idx is None for idx in [self.processor.parental_sup_idx, self.processor.parental_inf_idx,
                                        self.processor.pool_sup_idx, self.processor.pool_rnd_idx]):
-            messagebox.showerror("Erro", "Por favor, configure as colunas primeiro.")
+            messagebox.showerror("Error", "Please configure columns first.")
             return
 
         try:
@@ -735,25 +735,25 @@ class VCFProcessorGUI:
             selected_filter = self.filter_combo.get()
             original_count = len(self.processor.variant_lines)
 
-            self.log(f"Aplicando filtro: {selected_filter}")
-            self.log(f"Número original de variantes: {original_count}")
+            self.log(f"Applying filter: {selected_filter}")
+            self.log(f"Original number of variants: {original_count}")
 
-            if selected_filter == "Contagem Mínima de Alelos":
+            if selected_filter == "Minimum Allele Count":
                 n_reads = int(self.n_reads_var.get())
                 output_lines, filtered_lines = self.processor.filter_at_least(n_reads)
 
-            elif selected_filter == "Limiar Percentual":
+            elif selected_filter == "Percent Threshold":
                 threshold = float(self.threshold_var.get()) / 100.0
                 output_lines, filtered_lines = self.processor.filter_percent_threshold(threshold)
 
-            elif selected_filter == "Alelo de Referência Dominante":
+            elif selected_filter == "Dominant Reference Allele":
                 output_lines, filtered_lines = self.processor.filter_parental_sup_greater()
 
-            elif selected_filter == "Diferença da Frequência Máxima":
+            elif selected_filter == "Difference from Maximum Frequency":
                 diff_max = float(self.diff_max_var.get()) / 100.0
                 output_lines, filtered_lines = self.processor.filter_diff_from_greater(diff_max)
 
-            elif selected_filter == "Média do Pool Aleatório":
+            elif selected_filter == "Random Pool Mean":
                 threshold = float(self.rnd_threshold_var.get()) / 100.0
                 avg = float(self.avg_count_var.get()) / 100.0
                 std = float(self.std_dev_var.get()) / 100.0
@@ -762,35 +762,35 @@ class VCFProcessorGUI:
             filtered_count = len(output_lines)
             removed_count = original_count - filtered_count
 
-            self.log("Filtro aplicado com sucesso!")
-            self.log(f"Variantes originais: {original_count}")
-            self.log(f"Variantes após filtro: {filtered_count}")
-            self.log(f"Variantes removidas: {removed_count}")
-            self.log(f"Taxa de retenção: {filtered_count / original_count * 100:.2f}%")
+            self.log("Filter applied successfully!")
+            self.log(f"Original variants: {original_count}")
+            self.log(f"Variants after filter: {filtered_count}")
+            self.log(f"Variants removed: {removed_count}")
+            self.log(f"Retention rate: {filtered_count / original_count * 100:.2f}%")
 
             self.current_output_lines = output_lines
             self.save_button.config(state="normal")
 
         except Exception as e:
-            self.log(f"Erro ao aplicar filtro: {str(e)}")
-            messagebox.showerror("Erro", f"Erro ao aplicar filtro: {str(e)}")
+            self.log(f"Error applying filter: {str(e)}")
+            messagebox.showerror("Error", f"Error applying filter: {str(e)}")
 
     def save_result(self):
         if not self.current_output_lines or not self.processor:
-            messagebox.showwarning("Aviso", "Nenhum resultado para salvar.")
+            messagebox.showwarning("Warning", "No result to save.")
             return
         selected_filter = self.filter_combo.get()
         file_prefix = {
-            "Contagem Mínima de Alelos": "contagem_minima_alelos",
-            "Limiar Percentual": "limiar_percentual",
-            "Alelo de Referência Dominante": "alelo_referencia_dominante",
-            "Diferença da Frequência Máxima": "diferenca_frequencia_maxima",
-            "Média do Pool Aleatório": "media_pool_aleatorio"
+            "Minimum Allele Count": "minimum_allele_count",
+            "Percent Threshold": "percent_threshold",
+            "Dominant Reference Allele": "dominant_reference_allele",
+            "Difference from Maximum Frequency": "difference_from_max_frequency",
+            "Random Pool Mean": "random_pool_mean"
         }.get(selected_filter, "filtered")  # Default to "filtered" if not found
 
         default_name = f"{file_prefix}_{os.path.basename(self.processor.vcf_file_path)}"
         filename = filedialog.asksaveasfilename(
-            title=f"Salvar arquivo VCF filtrado - {selected_filter}",
+            title=f"Save filtered VCF file - {selected_filter}",
             initialfile=default_name,
             defaultextension=".vcf",
             filetypes=[("VCF files", "*.vcf"), ("All files", "*.*")]
@@ -799,20 +799,20 @@ class VCFProcessorGUI:
         if filename:
             try:
                 with open(filename, 'w') as f:
-                    # Escrever headers
+                    # Write headers
                     for header in self.processor.metadata_lines:
                         f.write(header)
-                    # Escrever variantes filtradas
+                    # Write filtered variants
                     for line in self.current_output_lines:
                         f.write(line)
 
-                self.log(f"Arquivo salvo: {filename}")
-                messagebox.showinfo("Sucesso",
-                                    f"Arquivo salvo com sucesso!\n{len(self.current_output_lines)} variantes exportadas.")
+                self.log(f"File saved: {filename}")
+                messagebox.showinfo("Success",
+                                    f"File saved successfully!\n{len(self.current_output_lines)} variants exported.")
 
             except Exception as e:
-                self.log(f"Erro ao salvar arquivo: {str(e)}")
-                messagebox.showerror("Erro", f"Erro ao salvar arquivo: {str(e)}")
+                self.log(f"Error saving file: {str(e)}")
+                messagebox.showerror("Error", f"Error saving file: {str(e)}")
 
 
 def main():
